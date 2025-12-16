@@ -5,21 +5,24 @@ description: "Project summary, methodology, and findings placeholder"
 
 ## Executive Summary
 
-_TODO: Provide a concise overview of the project objectives, key findings, and actionable recommendations._
+Overall for this project, we wanted to see if there was a connection between a baseball player's salary and their on-field performance. We found that there was a connection overall, that as their salary went up their perfomance seemed to go up, overall. While it is imporatnt for teams to thoroughly evaluate each decision they make about which players to sign, overall offering a large contract to a star palyer does not seem to diminish their play. As players get paid more, their perfomrance genreally tends to trend upward.
 
 ## Project Context
 
 _TODO: Describe the motivation, stakeholders, and success criteria for this analysis._
-
+The motivation behind this was the idea that certian mlb players seem to deteriorate in on-field perfoermace after signing a large free agent contract. We suspected that when players are given enormous sums of money to play, they could develop a sense of security and feel less of a necessity to perform to their whole abilities. These findings could be valuable to major league baseball teams, who could alter their strategies in recruiting and signing free agent players so their teams can play to their full potential. Success criteria for this analysis would be making a significant discovery about this through analysing the data, and in our case gaining sufficient evidence proving our suspicion about player performance and salaries.
 ## Data Sources
-
+All data we collected were from various sections of the site, baseball-reference.com.
 - _Primary dataset:_ `TODO - name and link`
+We collected data from the hitter datasets in baseball reference for each year 2018-2025. This was combined with scraped salary data in other sections of the site for our overall dataset.
 - _Supplementary data:_ `TODO - describe any external references`
 - _Data access notes:_ `TODO - mention licenses or refresh cadence`
-
+Baseball-reference allows this according to their robots.txt.
 ## Methodology
 
 1. _Data acquisition:_ `TODO - outline collection scripts/APIs`
+We collected data from the hitter datasets in baseball reference for each year 2018-2025. We filtered so only players with 100+ Palte Appearances appeared in the datasets.
+Salary Data was not available in a large dataset, so we had to build a scraper to loop through each player's individual page and scrape the salary data, creatign a dataset with just the salary data. We combined these datasets to create our overall dataset for hitters' statistics and salaries.
 2. _Cleaning pipeline:_ `TODO - summarize transformations and validations implemented`
 3. _Analysis workflow:_ `TODO - describe statistical or modeling techniques`
 4. _Tooling:_ `TODO - list packages, environments, and reproducibility steps`
