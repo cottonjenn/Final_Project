@@ -20,3 +20,13 @@ dependencies = [
     "pandas>=2.3.3",
     "streamlit>=1.40.0",
 ]
+[project.urls]
+Homepage = "https://github.com/imick5555/baseball_salary_performance"
+Repository = "https://github.com/imick5555/baseball_salary_performance.git"
+Issues = "https://github.com/imick5555/baseball_salary_performance/issues"
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.uv-build]
+package-dir = { "" = "src" }
