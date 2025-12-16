@@ -364,10 +364,3 @@ def churn_with_cloudscraper():
 ```
 
 This function organizes everything together to scrape the data, utilizing cloudscraper, laoding all the urls, saving progress to be able to pause and resume later, iterates over each link, limits rates, and outputs the data to salaries.json.
-
-<<<<<<< HEAD
->>>>>>> partner/master
-=======
-
-
->>>>>>> partner/master
