@@ -103,6 +103,33 @@ This function filters these players out.
 Next we will create indicators that mark when a player signs a big contract, leading to a large boost in pay. We will define an increase in $5,000,000 in salary as representative of this. 
 ```{python}
 from bbanalysis.analysis import create_contract_indicators
+create_contract_indicators(df_filtered,
+                               pct_threshold=0.5,
+                               abs_threshold=5_000_000)
 ```
+
+Now that we have this created, we can effectively compare statistical performance with before and after a large contract signing. One way to effectively do this is to run mixed effects models. We have a function for this:
+
+```{python}
+from bbanalysis.analysis import run_mixed_effects_models
+```
+
+From these mixed effects models we can glean valuable information, like does performance increase or decrease with salary increase or decrease over time, and whether a steep increase in salary can have a big impact on a player's performance.
+
+The next step would be visualizing the data through using this function:
+
+```{python}
+from bbanalysis.analysis import generate_visualizations
+```
+
+Now we can put it all together with this function:
+
+```{python}
+from bbanalysis.analysis import run_full_analysis
+```
+
+This allows us to implement all of these other functions into one full, effective analysis.
+
+
 
 
