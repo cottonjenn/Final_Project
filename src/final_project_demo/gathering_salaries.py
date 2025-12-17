@@ -189,10 +189,9 @@ def churn_with_cloudscraper():
 
     print("All done!")
 
-
 if __name__ == "__main__":
     # Uncomment to extract unique links from CSV
-    extract_unique_links("MLB_2018_2025_Cleaned.csv", "unique_links.json")
+    # extract_unique_links("MLB_2018_2025_Cleaned.csv", "unique_links.json")
    
     # Uncomment to test single scrape
     # async def test_single_scrape():
@@ -206,26 +205,27 @@ if __name__ == "__main__":
 
     # Remove asyncio.run() since churn_with_cloudscraper is not async
     # churn_with_cloudscraper()
+    pass
 
+## if you want to process the resulting JSON into a CSV --------------------
+# with open("salaries.json") as f:
+#     data = json.load(f)
 
-with open("salaries.json") as f:
-    data = json.load(f)
+# df = pd.json_normalize(data)
+# #df.to_csv("salaries.csv", index=False)
 
-df = pd.json_normalize(data)
-#df.to_csv("salaries.csv", index=False)
+# #salary = pd.read_csv('salaries.csv')
 
-#salary = pd.read_csv('salaries.csv')
+# long_df = (
+#     df
+#     .melt(
+#         id_vars=["id", "player"],           # columns to keep
+#         var_name="year",
+#         value_name="salary"
+#     )
+# )
 
-long_df = (
-    df
-    .melt(
-        id_vars=["id", "player"],           # columns to keep
-        var_name="year",
-        value_name="salary"
-    )
-)
+# # # Extract year number from 'salaries.2018'
+# long_df["year"] = long_df["year"].str.replace("salaries.", "", regex=False).astype(int)
 
-# # Extract year number from 'salaries.2018'
-long_df["year"] = long_df["year"].str.replace("salaries.", "", regex=False).astype(int)
-
-long_df.to_csv("salaries.csv", index=False)
+# long_df.to_csv("salaries.csv", index=False)
