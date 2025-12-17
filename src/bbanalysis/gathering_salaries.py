@@ -97,32 +97,32 @@ def parse_salary_table_from_soup(soup: BeautifulSoup) -> dict[int, int]:
    
     return salary_dict
 
-async def scrape_salary_from_url(url: str, session: aiohttp.ClientSession) -> dict[int, int]:
-    """Scrape salary data from a baseball-reference player page using HTTP GET"""
-    print(f"Starting to scrape {url}.")
+# async def scrape_salary_from_url(url: str, session: aiohttp.ClientSession) -> dict[int, int]:
+#     """Scrape salary data from a baseball-reference player page using HTTP GET"""
+#     print(f"Starting to scrape {url}.")
    
-    try:
-        async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as response:
-            if response.status != 200:
-                print(f"Failed to fetch {url}: HTTP {response.status}")
-                return {}
+#     try:
+#         async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as response:
+#             if response.status != 200:
+#                 print(f"Failed to fetch {url}: HTTP {response.status}")
+#                 return {}
            
-            html = await response.text()
-            soup = BeautifulSoup(html, 'html.parser')
-            salary_dict = parse_salary_table_from_soup(soup)
+#             html = await response.text()
+#             soup = BeautifulSoup(html, 'html.parser')
+#             salary_dict = parse_salary_table_from_soup(soup)
            
-            print(f"Done scraping {url}. Found {len(salary_dict)} salary entries.")
-            return salary_dict
+#             print(f"Done scraping {url}. Found {len(salary_dict)} salary entries.")
+#             return salary_dict
            
-    except asyncio.TimeoutError:
-        print(f"Timeout while scraping {url}")
-        return {}
-    except aiohttp.ClientError as e:
-        print(f"HTTP error while scraping {url}: {e}")
-        return {}
-    except Exception as e:
-        print(f"Unexpected error while scraping {url}: {e}")
-        return {}
+#     except asyncio.TimeoutError:
+#         print(f"Timeout while scraping {url}")
+#         return {}
+#     except aiohttp.ClientError as e:
+#         print(f"HTTP error while scraping {url}: {e}")
+#         return {}
+#     except Exception as e:
+#         print(f"Unexpected error while scraping {url}: {e}")
+#         return {}
 
 # csv_path='MLB_2018_2025_Cleaned.csv'
 # output_json_path='unique_links.json'
