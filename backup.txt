@@ -1,0 +1,733 @@
+---
+title: "Getting Started"
+jupyter: python3
+---
+
+Here is how you use my package:
+
+```{python}
+from bbanalysis import add
+
+print(add(2, 19))
+```
+have code that actually runs to demonstrate the package actually runs
+
+```{python}
+from bbanalysis import run_analysis_pipeline, run_cleaning_pipeling
+
+run_cleaning_pipeling()
+run_analysis_pipeline()
+```
+
+For the first part of the package use, we will import the first function for scraping the baseball hitting statistics. This will allow you to scrape the  players' statistics from the baseball-reference site.
+```{python}
+import sys
+import os
+sys.path.append(os.path.abspath("src"))
+from bbanalysis.gathering_stats import scrape_batting_data
+
+scrape_batting_data('https://www.baseball-reference.com/leagues/majors/2018-standard-batting.shtml')
+```
+
+Now we will do the second function which allows you to clean the data. Again, this is just the statistical data, not the salary data.
+```{python}
+from bbanalysis.gathering_stats import clean_batting_data
+
+df = [1,2,3,4,5]
+clean_batting_data(df)
+```
+
+This next set of functions from the package are for scraping and organizing the salary data into a nice dataset.
+
+This first one is for creating headers, allowing you to access the data from over 1,000 individaul player pages, as that is the only way to access the salary data.
+```{python}
+from bbanalysis.gathering_salaries import create_http_headers
+
+create_http_headers()
+```
+
+This next function is to parse the salary data from the players' pages and scrape it.
+```{python}
+from bbanalysis.gathering_salaries import parse_salary_table_from_soup
+```
+
+At this point, you should now have scraped all the statistics data and have the setup for scraping the salary data. These following functions futher prepare and execute the scraping of the data from the actual player pages.
+
+```{python}
+from bbanalysis.gathering_salaries import scrape_salary_from_url
+```
+
+This function uses asyncio to actually scrape the data fromt he site, getting the information needed for the parse function to get the salaries from. 
+
+```{python}
+from bbanalysis.gathering_salaries import extract_unique_links
+```
+
+This function is important becuase what it does is allow us to organize all the unique player links in one place. Many of the players in the data show up multiple times becuase they played more than one season over the six-year span, so this filters out repeat links.
+
+```{python}
+from bbanalysis.gathering_salaries import scrape_with_cloudscraper
+```
+
+Now with the scrape_salary_from_url function, you may already be able to scrape the salary data. However, due to rate limits it might be really difficult to scrape the data, and you might get errors. Using cloudscraper allows a user to implement their scraper while still maintaining speed and efficiency. Thus the scrape_with_cloudscraper function prepares us to use a cloudscraper. 
+
+Next you will run this funciton:
+
+```{python}
+from bbanalysis.gathering_salaries import churn_with_cloudscraper
+```
+
+This function implements the cloudscraper by creating one, then loops through the unique links dataset and scrapes all the salary data from 2018-2025 using scrape_with_cloudscraper. It then puts all the data into a .json file that stores the salary data. Once this finishes,you now have all the salary data from 2018-2025!
+
+Now you just need to convert and organize the salary data properly to combine with the other statistical data into one big dataset. This function will organize it as necessary:
+
+```{python}
+from bbanalysis.gathering_salaries import salaries_json_to_csv
+```
+
+Now we'll combine both the datasets using this function:
+
+```{python}
+from bbanalysis.analysis import load_and_merge_data
+```
+
+And now we're ready to do our analysis!
+
+The first thing we will do is filter out players who ahve less than four seasons in the dataset, because we want to compare how salary affects play and it is hard to make significant findings otherwise.
+
+```{python}
+from bbanalysis.analysis import filter_players_with_multiple_seasons
+```
+
+This function filters these players out. 
+Next we will create indicators that mark when a player signs a big contract, leading to a large boost in pay. We will define an increase in $5,000,000 in salary as representative of this. 
+```{python}
+from bbanalysis.analysis import create_contract_indicators
+```
+
+
+
+
+
+---
+title: "Documentation"
+---
+This goes through the process of each function for each step of our process of collecting the data, organizing it into a coherent dataset, and performing analysis.
+
+The first part starts with the collection of baseball hitting statistics from 2018 - 2025 to get a large sample of current data to work with. Collecting salaries was more complicated so we will go over this after. All the data was collected through the site baseball-reference.com.
+
+This first chunk will show the initial setup for the data collection:
+```{python}
+import requests
+import re
+from bs4 import BeautifulSoup
+import pandas as pd
+import time
+
+URLS = [
+    'https://www.baseball-reference.com/leagues/majors/2018-standard-batting.shtml',
+    'https://www.baseball-reference.com/leagues/majors/2019-standard-batting.shtml',
+    'https://www.baseball-reference.com/leagues/majors/2020-standard-batting.shtml',
+    'https://www.baseball-reference.com/leagues/majors/2021-standard-batting.shtml',
+    'https://www.baseball-reference.com/leagues/majors/2022-standard-batting.shtml',
+    'https://www.baseball-reference.com/leagues/majors/2023-standard-batting.shtml',
+    'https://www.baseball-reference.com/leagues/majors/2024-standard-batting.shtml',
+    'https://www.baseball-reference.com/leagues/majors/2025-standard-batting.shtml',
+]
+
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+}
+
+COLUMNS = [
+    'Rk','Player','Age','Team','Lg','WAR','G','PA','AB','R','H','2B','3B','HR','RBI',
+    'SB','CS','BB','SO','BA','OBP','SLG','OPS','OPS+','rOBA','Rbat+','TB','GIDP',
+    'HBP','SH','SF','IBB','Pos','Awards'
+]
+```
+
+This chunk sets up where the data is going to be scraped from and which columns to use.
+
+This second chunk is the function to actually scrape all the statistics data from those pages. It identifies where to scrape from, how many rows to scrape, and loops through the hitting dataset from each year from 2018 - 2025. It creates the dataframe for all the statistics.
+
+```{python}
+def scrape_batting_data(urls):
+    all_data = []
+
+    for url in urls:
+        year = int(re.search(r'/(\d{4})', url).group(1))
+        print(f"\nScraping {year}...")
+
+        r = requests.get(url, headers=HEADERS, timeout=15)
+        r.raise_for_status()
+        soup = BeautifulSoup(r.text, 'html.parser')
+
+        div = soup.find('div', id='switcher_players_standard_batting')
+        if not div:
+            print("  Switcher div not found")
+            continue
+
+        table = div.find('table', id='players_standard_batting')
+        if not table:
+            print("  Table not found")
+            continue
+
+        tbody = table.find('tbody')
+        if not tbody:
+            print("  Tbody not found")
+            continue
+
+        seen = set()
+
+        for row in tbody.find_all('tr'):
+            if row.get('class') and 'thead' in row.get('class'):
+                continue
+
+            cells = row.find_all(['th', 'td'])
+            if len(cells) < 25:
+                continue
+
+            player_cell = cells[1]
+            player_name = player_cell.get_text(strip=True)
+            team = cells[3].get_text(strip=True)
+
+            if player_name in seen and team != 'TOT':
+                continue
+
+            if team == 'TOT' or player_name not in seen:
+                seen.add(player_name)
+
+                row_dict = {'Year': year}
+
+                pos_map = {
+                    0: 'Rk', 1: 'Player', 2: 'Age', 3: 'Team', 4: 'Lg',
+                    5: 'WAR', 6: 'G', 7: 'PA', 8: 'AB', 9: 'R', 10: 'H',
+                    11: '2B', 12: '3B', 13: 'HR', 14: 'RBI', 15: 'SB',
+                    16: 'CS', 17: 'BB', 18: 'SO', 19: 'BA', 20: 'OBP',
+                    21: 'SLG', 22: 'OPS', 23: 'OPS+', 24: 'rOBA',
+                    25: 'Rbat+', 26: 'TB', 27: 'GIDP', 28: 'HBP',
+                    29: 'SH', 30: 'SF', 31: 'IBB', 32: 'Pos', 33: 'Awards'
+                }
+
+                for idx, cell in enumerate(cells):
+                    col_name = pos_map.get(idx)
+                    if not col_name:
+                        continue
+
+                    if col_name == 'Player':
+                        row_dict['Player'] = player_name
+                        a = cell.find('a')
+                        if a:
+                            row_dict['Player_Link'] = (
+                                'https://www.baseball-reference.com' + a['href']
+                            )
+                    else:
+                        row_dict[col_name] = cell.get_text(strip=True)
+
+                for col in COLUMNS:
+                    row_dict.setdefault(col, '')
+
+                all_data.append(row_dict)
+
+        print(f"  {len(seen)} players scraped for {year}")
+        time.sleep(1.2)
+
+    return all_data
+```
+
+This third function cleans the data and organizes it into a coherent dataframe. The function within it, get_batting_hand(), identifies whether each player is left handed, right handed, or bats with both hands, as we decided this would also be useful information in determining the overall value of a hitter.
+
+```{python}
+def clean_batting_data(df):
+    numeric_cols = [
+        'Age','WAR','G','PA','AB','R','H','2B','3B','HR','RBI','SB','CS',
+        'BB','SO','OPS+','TB','GIDP','HBP','SH','SF','IBB','Rbat+'
+    ]
+
+    for col in numeric_cols:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+
+    df = df[~df['Player'].str.contains('MLB Average', case=False, na=False)]
+    df = df[df['PA'] >= 100]
+
+    def get_batting_hand(name):
+        if name.endswith('*'):
+            return 'both'
+        elif name.endswith('#'):
+            return 'left'
+        elif name.endswith('?'):
+            return 'unknown'
+        return 'right'
+
+    df['batting_hand'] = df['Player'].apply(get_batting_hand)
+    df['Player'] = df['Player'].str.rstrip('*#?')
+
+    df = df.drop(columns=['Awards'])
+    df = df.sort_values(['Player', 'Year'])
+    df = df.drop_duplicates(subset=['Player', 'Year'], keep='first')
+
+    player_counts = df['Player'].value_counts()
+    players_2plus = player_counts[player_counts >= 3].index
+    df = df[df['Player'].isin(players_2plus)]
+
+    return df.reset_index(drop=True)
+```
+
+This main function actually implements the previous functions, scraping all the statistics according to how we wanted, to create a dataset of each mlb hitter from 2018 - 2025, filtered to players with over 100 plate appearances in at least one of the seasons.
+
+```{python}
+def main():
+    all_data = scrape_batting_data(URLS)
+
+    df = pd.DataFrame(
+        all_data,
+        columns=['Year'] + COLUMNS + ['Player_Link']
+    )
+
+    mlb = clean_batting_data(df)
+
+    mlb.to_csv('MLB_2018_2025_Cleaned.csv', index=False)
+    print("\nSaved: MLB_2018_2025_Cleaned.csv")
+
+
+# ==========================
+# ENTRY POINT
+# ==========================
+
+if __name__ == "__main__":
+    main()
+```
+
+Now we will move on to the next part of the data collection, which is gathering the salary data. This was more complicated to collect, because there is no dataset that has each player's salary data in one place. We had to build a scraper that iterated through the unique page of each player in the dataset within baseball-reference and scraped their salaries from 2018 - 2025. The first dataset had included the links to each of these players' pages, so we utilized this to create a json file of unique player links for the scraper to iterate through, so that no players' page would be accessed more than once. Each code chunk will be explained below.
+
+```{python}
+def create_http_headers() -> dict[str, str]:
+    return {
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+    }
+```
+
+This first function creates the headers that allows us to access the data and browser without being blocked.
+
+```{python}
+def parse_salary_table_from_soup(soup: BeautifulSoup) -> dict[int, int]:
+    
+    salary_dict = {}
+   
+    # First try to find the table normally
+    salary_table = soup.find('table', {'id': 'br-salaries'})
+   
+    # If not found, look for it in HTML comments (common pattern for baseball-reference)
+    if not salary_table:
+        comments = soup.find_all(string=lambda text: isinstance(text, Comment))
+        for comment in comments:
+            if 'id="br-salaries"' in comment:
+                comment_soup = BeautifulSoup(comment, 'html.parser')
+                salary_table = comment_soup.find('table', {'id': 'br-salaries'})
+                if salary_table:
+                    break
+   
+    if not salary_table:
+        return salary_dict
+   
+    rows = salary_table.find_all('tr')
+    if not rows:
+        return salary_dict
+   
+    header_row = rows[0]
+    headers = [th.get_text().strip() for th in header_row.find_all(['th', 'td'])]
+   
+    try:
+        year_col_idx = headers.index('Year')
+        salary_col_idx = headers.index('Salary')
+    except ValueError:
+        return salary_dict
+   
+    for row in rows[1:]:
+        cells = row.find_all(['td', 'th'])
+        if len(cells) <= max(year_col_idx, salary_col_idx):
+            continue
+           
+        year_text = cells[year_col_idx].get_text().strip()
+        salary_text = cells[salary_col_idx].get_text().strip()
+       
+        if year_text.isdigit() and len(year_text) == 4:
+            try:
+                year = int(year_text)
+                if 2018 <= year <= 2025:
+                    if salary_text and salary_text.startswith('$'):
+                        salary_clean = salary_text.replace("$", "").replace(",", "").strip()
+                        if salary_clean:
+                            try:
+                                salary = int(salary_clean)
+                                salary_dict[year] = salary
+                            except ValueError:
+                                pass
+            except ValueError:
+                continue
+   
+    return salary_dict
+  ```
+
+  This second function is the one that finds and parses the salary data in each player's page. It identifies where it is, finds the salaries from 2018-2025, and converts the data frmo string to integer form. One difficulty is that many, if not all, of the players' salary data was within comments in the source code of their individual pages, so we had to account for this in our scraper.
+  
+  ```{python}
+  async def scrape_salary_from_url(url: str, session: aiohttp.ClientSession) -> dict[int, int]:
+    print(f"Starting to scrape {url}.")
+   
+    try:
+        async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as response:
+            if response.status != 200:
+                print(f"Failed to fetch {url}: HTTP {response.status}")
+                return {}
+           
+            html = await response.text()
+            soup = BeautifulSoup(html, 'html.parser')
+            salary_dict = parse_salary_table_from_soup(soup)
+           
+            print(f"Done scraping {url}. Found {len(salary_dict)} salary entries.")
+            return salary_dict
+           
+    except asyncio.TimeoutError:
+        print(f"Timeout while scraping {url}")
+        return {}
+    except aiohttp.ClientError as e:
+        print(f"HTTP error while scraping {url}: {e}")
+        return {}
+    except Exception as e:
+        print(f"Unexpected error while scraping {url}: {e}")
+        return {}
+```
+
+This function downloads each player's page asynchonously and extracts the salary data.
+
+```{python}
+def extract_unique_links(csv_path: str, output_json_path: str) -> None:
+    """Extract unique player links from CSV and save as JSON"""
+    df = pd.read_csv(csv_path)
+   
+    url_to_player = df.dropna(subset=['Player_Link']).drop_duplicates(subset=['Player_Link']).set_index('Player_Link')['Player'].to_dict()
+    unique_urls = df['Player_Link'].dropna().unique().tolist()
+    links_with_ids = [{"id": i + 1, "url": url, "player": url_to_player[url]} for i, url in enumerate(unique_urls)]
+   
+    with open(output_json_path, 'w') as f:
+        json.dump(links_with_ids, f, indent=2)
+```
+
+This function extracts the links out of the dataset of player links, to create a list of each unique players' page links (each player's link appearing once). This allows our function to easily loop through without accessing players' pages multiple times, as many players played multiple seasons over the 2018 - 2025 period.
+
+```{python}
+def scrape_with_cloudscraper(url: str, scraper) -> dict[int, int]:
+    print(f"Scraping {url}")
+    try:
+        html = scraper.get(url, timeout=30).text
+        soup = BeautifulSoup(html, 'html.parser')
+        return parse_salary_table_from_soup(soup)
+    except Exception as e:
+        print(f"Failed {url}: {e}")
+        return {}
+```
+
+This function utilizes cloudscraper to bypass Cloudflare in baseball-reference, ebcause cloudflare was blocking any attempts to scrape data from the pages otherwise.
+
+```{python}
+def churn_with_cloudscraper():
+    scraper = cloudscraper.create_scraper(
+        browser={'browser': 'chrome', 'platform': 'windows', 'mobile': False},
+        delay=10
+    )
+
+    with open("unique_links.json", "r") as f:
+        links = json.load(f)
+
+    try:
+        with open("salaries.json", "r") as f:
+            existing = json.load(f)
+    except:
+        existing = []
+
+    existing_ids = {x['id'] for x in existing}
+    remaining = [l for l in links if l['id'] not in existing_ids]
+
+    results = {e['id']: e for e in existing}
+
+    for link in remaining:
+        salary_data = scrape_with_cloudscraper(link['url'], scraper)
+        results[link['id']] = {
+            "id": link['id'],
+            "player": link['player'],
+            "salaries": salary_data
+        }
+
+        
+        with open("salaries.json", "w") as f:
+            json.dump(sorted(results.values(), key=lambda x: x['id']), f, indent=2)
+
+        print(f"Success: Saved {link['player']} → {len(salary_data)} years")
+        time.sleep(4)  
+
+    print("All done!")
+```
+
+This function organizes everything together to scrape the data, utilizing the cloudscraper function, laoding all the urls, saving progress to be able to pause and resume later, iterates over each link, limits rates, and outputs the data to salaries.json.
+
+So now we have all the data scraped that we need. We just need to organize it into a coherent dataset so we can perform analysis. Since we used json files to store the salary data, we need to convert it to csv so we can combine it with the hitting statistics data.
+
+```{python}
+with open("salaries.json") as f:
+    data = json.load(f)
+
+df = pd.json_normalize(data)
+#df.to_csv("salaries.csv", index=False)
+
+#salary = pd.read_csv('salaries.csv')
+
+long_df = (
+    df
+    .melt(
+        id_vars=["id", "player"],           # columns to keep
+        var_name="year",
+        value_name="salary"
+    )
+)
+
+# # Extract year number from 'salaries.2018'
+long_df["year"] = long_df["year"].str.replace("salaries.", "", regex=False).astype(int)
+
+long_df.to_csv("salaries.csv", index=False)
+```
+
+This code converts the salary.json file into a csv file, and melts to organize the data to easily combine with the other salary data.
+
+```{python}
+def load_and_merge_data(stats_path='MLB_2018_2025_Cleaned.csv',
+                        salary_path='salaries.csv',
+                        output_merged_path='MLB_2018_2025_Full.csv'):
+    """
+    Load player stats and salary data, merge them, and save the merged dataset.
+    
+    Parameters:
+        stats_path (str): Path to the cleaned player stats CSV.
+        salary_path (str): Path to the salaries CSV.
+        output_merged_path (str): Where to save the merged DataFrame.
+    
+    Returns:
+        pd.DataFrame: Merged dataset with salary information.
+    """
+    print("Loading and merging data...")
+    df = pd.read_csv(stats_path)
+    salary = pd.read_csv(salary_path)
+    
+    # Standardize column names
+    df.columns = df.columns.str.lower()
+    
+    # Merge on player name and year
+    full = df.merge(salary, on=["player", "year"], how="left")
+    
+    # Save merged file for future use
+    full.to_csv(output_merged_path, index=False)
+    print(f"Merged data saved to {output_merged_path}")
+    
+    return full
+```
+
+This function conbines the salary and statsitcs datasets together into one dataset.
+
+```{python}
+def filter_players_with_multiple_seasons(df, min_seasons=5):
+    """
+    Filter to players with at least `min_seasons` seasons (default >4, i.e. 5+).
+    
+    Parameters:
+        df (pd.DataFrame): Input DataFrame with 'player' column.
+        min_seasons (int): Minimum number of seasons required.
+    
+    Returns:
+        pd.DataFrame: Filtered DataFrame.
+    """
+    counts = df["player"].value_counts()
+    qualified_players = counts[counts >= min_seasons].index
+    df_filtered = df[df["player"].isin(qualified_players)].copy()
+    print(f"Kept {len(qualified_players)} players with at least {min_seasons} seasons.")
+    return df_filtered
+```
+
+This function takes the dataset and filters out some of the players. MAny players in the dataset didn't have salareis recorded in baseball-reference, so tehy had to be filtered out, and many others only played one or two seasons during the period, so they were filtered out as well.
+
+```{python}
+def create_contract_indicators(df_filtered,
+                               pct_threshold=0.5,
+                               abs_threshold=5_000_000):
+    """
+    Create indicators for 'big contract' years and years relative to contract.
+    
+    Parameters:
+        df_filtered (pd.DataFrame): DataFrame with salary and player info.
+        pct_threshold (float): Percent salary increase to qualify as big contract.
+        abs_threshold (float): Absolute dollar increase to qualify.
+    
+    Returns:
+        pd.DataFrame: DataFrame with new columns:
+                      - big_contract_year
+                      - years_from_contract
+                      - post_contract
+    """
+    print("Creating contract indicators...")
+    df = df_filtered.sort_values(['player', 'year']).copy()
+    
+    # Year-over-year changes
+    df['salary_change'] = df.groupby('player')['salary'].diff()
+    df['pct_salary_change'] = df.groupby('player')['salary'].pct_change()
+    
+    # Flag big contract years
+    df['big_contract_year'] = (
+        (df['pct_salary_change'] > pct_threshold) |
+        (df['salary_change'] > abs_threshold)
+    )
+    
+    print(f"Found {df['big_contract_year'].sum()} big contract events.")
+    
+    # Mark years relative to first big contract for each player
+    def mark_years_from_contract(player_df):
+        if player_df['big_contract_year'].any():
+            contract_year = player_df[player_df['big_contract_year']].iloc[0]['year']
+            player_df['years_from_contract'] = player_df['year'] - contract_year
+        else:
+            player_df['years_from_contract'] = np.nan
+        return player_df
+    
+    df = df.groupby('player', group_keys=False).apply(mark_years_from_contract)
+    
+    # Post-contract indicator (0 = pre, 1 = post, NaN = no contract)
+    df['post_contract'] = (df['years_from_contract'] >= 0).astype(float)
+    df.loc[df['years_from_contract'].isna(), 'post_contract'] = np.nan
+    
+    return df
+```
+
+This function creates big contract indicators. Basically we wanted to identify when a player signed a big contract, to see if his play drastically changed from before to after they signed a contrct. It identifies when a player signed a large contract, defined as at least a 5 million dollar increase in salary, and marks up to two years before and after the signing.
+
+```{python}
+def run_mixed_effects_models(df_processed, window_years=3):
+    """
+    Run the two main mixed-effects models:
+        1. Overall salary → performance
+        2. Pre/Post contract performance change (with controls)
+    
+    Parameters:
+        df_processed (pd.DataFrame): DataFrame after contract indicators.
+        window_years (int): How many years before/after contract to include.
+    
+    Returns:
+        dict: Contains fitted models and restricted dataset for model2.
+    """
+    results = {}
+    
+    # Model 1: All players - Does salary predict performance?
+    print("\nRunning Model 1: Salary → OPS (all players)")
+    df_model1 = df_processed.dropna(subset=['ops', 'salary', 'war', 'year'])
+    try:
+        model1 = smf.mixedlm("ops ~ salary + war + year",
+                            data=df_model1,
+                            groups=df_model1["player"]).fit(reml=False)
+        print(model1.summary())
+        results['model1'] = model1
+    except Exception as e:
+        print(f"Model 1 failed: {e}")
+    
+    # Model 2: Pre/Post contract (restricted window)
+    print("\nRunning Model 2: Pre vs Post contract performance")
+    df_model2 = df_processed[
+        (df_processed['years_from_contract'].notna()) &
+        (df_processed['years_from_contract'].between(-window_years, window_years))
+    ].copy()
+    
+    print(f"Using {len(df_model2)} observations from {df_model2['player'].nunique()} players.")
+    
+    # Formula: include age if available
+    if 'age' in df_model2.columns:
+        formula = "ops ~ post_contract + age + year"
+    else:
+        formula = "ops ~ post_contract + year"
+        print("Note: 'age' column missing → excluded from model.")
+    
+    try:
+        model2 = smf.mixedlm(formula,
+                            data=df_model2,
+                            groups=df_model2["player"]).fit(reml=False)
+        print(model2.summary())
+        
+        # Interpretation
+        coef = model2.params['post_contract']
+        pval = model2.pvalues['post_contract']
+        ci = model2.conf_int().loc['post_contract']
+        
+        print("\nPost-contract effect interpretation:")
+        print(f"Coefficient: {coef:.4f} | p-value: {pval:.4f} | 95% CI: [{ci[0]:.4f}, {ci[1]:.4f}]")
+        if pval < 0.05:
+            print("Significant change detected." if coef < 0 else "Significant improvement detected.")
+        else:
+            print("No significant post-contract effect.")
+        
+        results['model2'] = model2
+        results['df_model2'] = df_model2
+    except Exception as e:
+        print(f"Model 2 failed: {e}")
+    
+    return results
+```
+
+This function creates mixed effects models to visualize salary with hitting statistics comparisons, and for before and after the contract signnig; it also makes comparisons based on age, because if a player signs a contract at a certain age their decline could be more due to age than the contract signing.
+
+```{python}
+def run_full_analysis(stats_path='MLB_2018_2025_Cleaned.csv',
+                      salary_path='salaries.csv',
+                      min_seasons=5,
+                      output_dir='plots'):
+    """
+    Complete end-to-end analysis pipeline.
+    Call this function from other scripts to reproduce the full analysis.
+    """
+    print("="*80)
+    print("STARTING MLB BIG CONTRACT PERFORMANCE ANALYSIS")
+    print("="*80)
+    
+    # Step 1: Load and merge
+    full_df = load_and_merge_data(stats_path, salary_path)
+    
+    # Step 2: Filter players
+    df_filtered = filter_players_with_multiple_seasons(full_df, min_seasons=min_seasons)
+    
+    # Step 3: Create contract indicators
+    df_processed = create_contract_indicators(df_filtered)
+    
+    # Step 4: Run models
+    results = run_mixed_effects_models(df_processed)
+    
+    # Step 5: Visualizations (if model2 succeeded)
+    if 'df_model2' in results:
+        generate_visualizations(results['df_model2'], output_dir=output_dir)
+    
+    print("\nANALYSIS COMPLETE!")
+    print("="*80)
+    
+    return {
+        'full_data': full_df,
+        'processed_data': df_processed,
+        'models': results
+    }
+
+
+# ==============================================================================
+# Example usage when run directly
+# ==============================================================================
+if __name__ == "__main__":
+    run_full_analysis()
+```
+
+This last function incoropates All of the other functions, to run the full analysis, allowing us to effectively analyze and visualize the data regarding MLB hitters and salaries.

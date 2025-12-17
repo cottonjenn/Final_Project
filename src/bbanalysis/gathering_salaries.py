@@ -151,7 +151,6 @@ def scrape_with_cloudscraper(url: str, scraper) -> dict[int, int]:
         return {}
     
 def churn_with_cloudscraper():
-    # This bypasses Cloudflare ~80–90% of the time
     scraper = cloudscraper.create_scraper(
         browser={'browser': 'chrome', 'platform': 'windows', 'mobile': False},
         delay=10
