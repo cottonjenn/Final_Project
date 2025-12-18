@@ -20,6 +20,7 @@ Tutorial [here](Tutorial.qmd).
 
 Review the [technical report](TechnicalReport.qmd).
 
+Python Package [here](https://pypi.org/project/bbanalysis/0.2.2/).
 
 
 **Hard Skills we demonstrate in Python:** webscraping (streamlit and BeautifulSoup), modeling with multiple linear regression, data cleaning and wrangling, data visualization
