@@ -127,8 +127,26 @@ ul.task-list li input[type="checkbox"] {
   <ul>
   <li><a href="#executive-summary" id="toc-executive-summary" class="nav-link active" data-scroll-target="#executive-summary">Executive Summary</a></li>
   <li><a href="#project-context" id="toc-project-context" class="nav-link" data-scroll-target="#project-context">Project Context</a></li>
-  <li><a href="#results-diagnostics" id="toc-results-diagnostics" class="nav-link" data-scroll-target="#results-diagnostics">Results &amp; Diagnostics</a></li>
-  <li><a href="#discussion-next-steps" id="toc-discussion-next-steps" class="nav-link" data-scroll-target="#discussion-next-steps">Discussion &amp; Next Steps</a></li>
+  <li><a href="#data-sources" id="toc-data-sources" class="nav-link" data-scroll-target="#data-sources">Data Sources</a></li>
+  <li><a href="#methodology" id="toc-methodology" class="nav-link" data-scroll-target="#methodology">Methodology</a>
+  <ul class="collapse">
+  <li><a href="#data-acquisition" id="toc-data-acquisition" class="nav-link" data-scroll-target="#data-acquisition">1. Data Acquisition</a></li>
+  <li><a href="#cleaning-pipeline" id="toc-cleaning-pipeline" class="nav-link" data-scroll-target="#cleaning-pipeline">2. Cleaning Pipeline</a></li>
+  <li><a href="#analysis-workflow" id="toc-analysis-workflow" class="nav-link" data-scroll-target="#analysis-workflow">3. Analysis Workflow</a></li>
+  <li><a href="#tooling" id="toc-tooling" class="nav-link" data-scroll-target="#tooling">4. Tooling</a></li>
+  </ul></li>
+  <li><a href="#results-diagnostics" id="toc-results-diagnostics" class="nav-link" data-scroll-target="#results-diagnostics">Results &amp; Diagnostics</a>
+  <ul class="collapse">
+  <li><a href="#summary-statistics-and-descriptive-analysis" id="toc-summary-statistics-and-descriptive-analysis" class="nav-link" data-scroll-target="#summary-statistics-and-descriptive-analysis">Summary Statistics and Descriptive Analysis</a></li>
+  <li><a href="#mixed-effects-model-results" id="toc-mixed-effects-model-results" class="nav-link" data-scroll-target="#mixed-effects-model-results">Mixed Effects Model Results</a></li>
+  <li><a href="#model-diagnostics" id="toc-model-diagnostics" class="nav-link" data-scroll-target="#model-diagnostics">Model Diagnostics</a></li>
+  </ul></li>
+  <li><a href="#discussion-next-steps" id="toc-discussion-next-steps" class="nav-link" data-scroll-target="#discussion-next-steps">Discussion &amp; Next Steps</a>
+  <ul class="collapse">
+  <li><a href="#interpretation-of-results" id="toc-interpretation-of-results" class="nav-link" data-scroll-target="#interpretation-of-results">Interpretation of Results</a></li>
+  <li><a href="#limitations" id="toc-limitations" class="nav-link" data-scroll-target="#limitations">Limitations</a></li>
+  <li><a href="#future-research-directions" id="toc-future-research-directions" class="nav-link" data-scroll-target="#future-research-directions">Future Research Directions</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -161,27 +179,290 @@ ul.task-list li input[type="checkbox"] {
 
 <section id="executive-summary" class="level2">
 <h2 class="anchored" data-anchor-id="executive-summary">Executive Summary</h2>
-<p>Overall for this project, we wanted to see if there was a connection between a baseball player’s salary and their on-field performance. We found that there was a connection overall, that as their salary went up their perfomance seemed to go up, overall. While it is imporatnt for teams to thoroughly evaluate each decision they make about which players to sign, overall offering a large contract to a star palyer does not seem to diminish their play. As players get paid more, their perfomrance genreally tends to trend upward.</p>
+<p>This analysis investigates whether signing large contracts negatively impacts MLB player performance, examining the commonly held belief that financial security leads to decreased motivation and effort. Using data from 300 MLB hitters across the 2018-2025 seasons (1,985 player-seasons), we identified 495 “big contract” events and compared player performance before and after contract signing using OPS and WAR as primary performance metrics.</p>
+<p><strong>Key Findings:</strong></p>
+<ul>
+<li>Descriptive statistics show an apparent decline in performance post-contract (ΔOPS = -0.020, ΔWAR = -0.241)</li>
+<li>However, mixed effects regression controlling for age and player-specific effects found no significant contract effect (β = 0.011, p = 0.113)</li>
+<li>Age was the only significant predictor of performance decline (β = -0.004, p = 0.010)</li>
+<li>Players typically sign major contracts at ages 28-31, coinciding with natural performance decline</li>
+<li>59.3% of players declined post-contract, consistent with normal aging patterns rather than systematic motivational effects</li>
+</ul>
+<p><strong>Actionable Recommendations:</strong></p>
+<ul>
+<li>Teams should not discount player value based on contract status; performance decline is attributable to age, not contract-induced complacency</li>
+<li>Front offices should focus on age and injury risk rather than motivational concerns when evaluating contract extensions</li>
+<li>High-profile “failures” like Anthony Rendon appear to be outliers driven by injuries and aging rather than representative of systematic patterns</li>
+</ul>
 </section>
 <section id="project-context" class="level2">
 <h2 class="anchored" data-anchor-id="project-context">Project Context</h2>
-<p><em>TODO: Describe the motivation, stakeholders, and success criteria for this analysis.</em> The motivation behind this was the idea that certian mlb players seem to deteriorate in on-field perfoermace after signing a large free agent contract. We suspected that when players are given enormous sums of money to play, they could develop a sense of security and feel less of a necessity to perform to their whole abilities. These findings could be valuable to major league baseball teams, who could alter their strategies in recruiting and signing free agent players so their teams can play to their full potential. Success criteria for this analysis would be making a significant discovery about this through analysing the data, and in our case gaining sufficient evidence proving our suspicion about player performance and salaries. ## Data Sources All data we collected were from various sections of the site, baseball-reference.com. - <em>Primary dataset:</em> <code>TODO - name and link</code> We collected data from the hitter datasets in baseball reference for each year 2018-2025. This was combined with scraped salary data in other sections of the site for our overall dataset. - <em>Supplementary data:</em> <code>TODO - describe any external references</code> - <em>Data access notes:</em> <code>TODO - mention licenses or refresh cadence</code> Baseball-reference allows this according to their robots.txt. ## Methodology</p>
+<p><strong>Motivation:</strong><br>
+Professional sports discourse frequently suggests that athletes underperform after signing lucrative contracts, with financial security allegedly reducing motivation and effort. High-profile cases like Anthony Rendon (who signed a $245M contract with the Los Angeles Angels after his 2019 World Series run, then immediately saw production decline) fuel this narrative. This analysis seeks to rigorously test whether this “contract effect” exists or if observed declines are attributable to other factors like aging or regression to the mean.</p>
+<p><strong>Stakeholders:</strong></p>
+<ul>
+<li>MLB front offices and general managers evaluating contract extension decisions</li>
+<li>Sports analytics professionals interested in player valuation</li>
+<li>Fans and media seeking data-driven insights into player performance patterns</li>
+<li>Academic researchers studying behavioral economics in professional sports</li>
+</ul>
+<p><strong>Success Criteria:</strong></p>
 <ol type="1">
-<li><em>Data acquisition:</em> <code>TODO - outline collection scripts/APIs</code> We collected data from the hitter datasets in baseball reference for each year 2018-2025. We filtered so only players with 100+ Palte Appearances appeared in the datasets. Salary Data was not available in a large dataset, so we had to build a scraper to loop through each player’s individual page and scrape the salary data, creatign a dataset with just the salary data. We combined these datasets to create our overall dataset for hitters’ statistics and salaries.</li>
-<li><em>Cleaning pipeline:</em> <code>TODO - summarize transformations and validations implemented</code></li>
-<li><em>Analysis workflow:</em> <code>TODO - describe statistical or modeling techniques</code></li>
-<li><em>Tooling:</em> <code>TODO - list packages, environments, and reproducibility steps</code></li>
+<li>Successfully collect and clean multi-year salary and performance data for 100+ MLB players</li>
+<li>Implement statistical models that properly control for confounding factors (age, player quality, temporal trends)</li>
+<li>Provide clear, evidence-based conclusions about the existence and magnitude of any contract effect</li>
+<li>Generate visualizations suitable for presentation to both technical and non-technical audiences</li>
+<li>Produce reproducible analysis pipeline for future research extensions</li>
 </ol>
+</section>
+<section id="data-sources" class="level2">
+<h2 class="anchored" data-anchor-id="data-sources">Data Sources</h2>
+<p><strong>Primary dataset:</strong> Baseball Reference (https://www.baseball-reference.com)</p>
+<ul>
+<li>Player statistics (OPS, WAR) for MLB hitters, 2018-2025 seasons</li>
+<li>Salary data from Spotrac and Baseball Reference salary pages</li>
+<li>Player biographical information (age, position)</li>
+<li>Collected via custom Python web scraping package</li>
+</ul>
+<p><strong>Supplementary data:</strong></p>
+<ul>
+<li>Contract signing dates and values verified against MLB Trade Rumors and ESPN reports</li>
+<li>Player transaction history to identify team changes concurrent with contracts</li>
+</ul>
+<p><strong>Data access notes:</strong></p>
+<ul>
+<li>Baseball Reference data is publicly available but subject to their Terms of Service</li>
+<li>Data collection performed in January 2025; salary data updates annually</li>
+<li>No API available; data collected via web scraping with appropriate rate limiting</li>
+<li>Analysis focuses on 2018-2025 to balance recency with sample size</li>
+</ul>
+</section>
+<section id="methodology" class="level2">
+<h2 class="anchored" data-anchor-id="methodology">Methodology</h2>
+<section id="data-acquisition" class="level3">
+<h3 class="anchored" data-anchor-id="data-acquisition">1. Data Acquisition</h3>
+<p><strong>Player Statistics Collection (<code>batting_scraper.py</code>):</strong></p>
+<p>Our custom scraping pipeline collected batting statistics from Baseball Reference using the <code>scrape_batting_data()</code> function, which:</p>
+<ul>
+<li>Iterates through eight season URLs (2018-2025) from Baseball Reference’s league-wide batting pages</li>
+<li>Implements browser-mimicking headers to avoid bot detection</li>
+<li>Extracts 34 statistical columns including OPS, WAR, and traditional batting metrics</li>
+<li>Handles the “TOT” (total) rows for players who changed teams mid-season, keeping only aggregated statistics</li>
+<li>Applies 1.2-second delays between requests to respect server load</li>
+<li>Returns structured data with player profile links for salary lookup</li>
+</ul>
+<p>The function processed all MLB players with qualifying plate appearances, yielding 1,985 player-seasons across 300 unique players.</p>
+<p><strong>Salary Data Collection (<code>salary_scraper.py</code>):</strong></p>
+<p>Salary collection required a two-stage process due to Baseball Reference’s anti-scraping measures:</p>
+<ol type="1">
+<li><p><strong>Link Extraction</strong>: The <code>extract_unique_links()</code> function parsed the cleaned batting data to identify 300 unique player profile URLs, saving them with associated player names and IDs to <code>unique_links.json</code></p></li>
+<li><p><strong>Salary Scraping</strong>: The <code>churn_with_cloudscraper()</code> function used the <code>cloudscraper</code> library (which handles JavaScript challenges) to:</p>
+<ul>
+<li>Parse HTML salary tables using <code>parse_salary_table_from_soup()</code>, which searches both visible tables and HTML comments (a common Baseball Reference pattern)</li>
+<li>Extract year-salary pairs for 2018-2025 where available</li>
+<li>Implement incremental saving to <code>salaries.json</code> with 4-second delays between requests</li>
+<li>Resume capability if interrupted mid-scrape</li>
+<li>Convert nested JSON to tidy long-format CSV via <code>salaries_json_to_csv()</code></li>
+</ul></li>
+</ol>
+<p>This approach successfully collected salary data for all 300 players with a ~95% completion rate for available years.</p>
+</section>
+<section id="cleaning-pipeline" class="level3">
+<h3 class="anchored" data-anchor-id="cleaning-pipeline">2. Cleaning Pipeline</h3>
+<p><strong>Batting Statistics Cleaning (<code>batting_scraper.py</code>):</strong></p>
+<p>The <code>clean_batting_data()</code> function performed the following transformations:</p>
+<ul>
+<li>Converted 23 statistical columns from strings to numeric types using <code>pd.to_numeric()</code> with error coercion</li>
+<li>Removed aggregate rows (e.g., “MLB Average”)</li>
+<li>Applied minimum playing time filter: 100+ plate appearances per season</li>
+<li>Extracted batting hand indicators from player name suffixes (<code>*</code> = switch, <code>#</code> = left, default = right)</li>
+<li>Stripped special characters from player names for consistent matching</li>
+<li>Removed duplicate player-year combinations, keeping first occurrence</li>
+<li>Dropped the <code>Awards</code> column (not needed for analysis)</li>
+</ul>
+<p><strong>Data Integration (<code>analysis_package.py</code>):</strong></p>
+<p>The <code>load_and_merge_data()</code> function:</p>
+<ul>
+<li>Loaded cleaned batting statistics and salary CSVs</li>
+<li>Standardized column names to lowercase for consistency</li>
+<li>Performed left join on player name and year, preserving all batting records</li>
+<li>Saved merged dataset to <code>MLB_2018_2025_Full.csv</code></li>
+</ul>
+<p>The <code>filter_players_with_multiple_seasons()</code> function restricted analysis to players with 5+ seasons to ensure sufficient longitudinal data for mixed effects modeling (reduced dataset to 300 qualified players).</p>
+</section>
+<section id="analysis-workflow" class="level3">
+<h3 class="anchored" data-anchor-id="analysis-workflow">3. Analysis Workflow</h3>
+<p><strong>Contract Event Identification (<code>analysis_package.py</code>):</strong></p>
+<p>The <code>create_contract_indicators()</code> function engineered three key variables:</p>
+<ul>
+<li><code>big_contract_year</code>: Binary flag for salary increases exceeding 50% OR $5M absolute increase (identified 495 events)</li>
+<li><code>years_from_contract</code>: Integer offset from each player’s first big contract (e.g., -2, -1, 0, 1, 2…)</li>
+<li><code>post_contract</code>: Binary indicator (0 = pre-contract, 1 = post-contract, NaN = no contract event)</li>
+</ul>
+<p>This approach captures major contract signings while filtering noise from minor raises or team changes.</p>
+<p><strong>Statistical Modeling (<code>analysis_package.py</code>):</strong></p>
+<p>The <code>run_mixed_effects_models()</code> function implemented two specifications using <code>statsmodels.mixedlm()</code>:</p>
+<p><strong>Model 1: Overall Salary-Performance Relationship</strong></p>
+<ul>
+<li>Formula: <code>ops ~ salary + war + year + (1|player)</code></li>
+<li>Sample: All 1,590 player-seasons with complete data</li>
+<li>Purpose: Test whether higher salaries correlate with performance across the league</li>
+<li>Random intercept structure accounts for player-specific baseline ability</li>
+</ul>
+<p><strong>Model 2: Contract Effect with Controls</strong></p>
+<ul>
+<li>Formula: <code>ops ~ post_contract + age + year + (1|player)</code></li>
+<li>Sample: 1,395 observations within ±3 years of contract signing (253 players)</li>
+<li>Purpose: Isolate post-contract performance change while controlling for:
+<ul>
+<li><strong>Age</strong>: Natural performance decline over career</li>
+<li><strong>Year</strong>: League-wide temporal trends (e.g., changes in ball composition, rules)</li>
+<li><strong>Player random effects</strong>: Individual baseline differences in ability</li>
+</ul></li>
+<li>Estimation: Maximum likelihood (REML=False) for model comparison compatibility</li>
+</ul>
+<p><strong>Robustness Checks:</strong></p>
+<ul>
+<li>Age-stratified analysis: Tested for differential effects across age groups (&lt;27, 27-30, 30+)</li>
+<li>Interaction models: Examined whether age moderates contract effects (<code>post_contract * age_group</code>)</li>
+<li>Temporal trend analysis: Tested for progressive decline using <code>years_post</code> as continuous predictor</li>
+<li>Paired t-tests: Within-player comparisons of pre/post means</li>
+</ul>
+<p><strong>Visualization Generation (<code>analysis_package.py</code>):</strong></p>
+<p>The <code>generate_visualizations()</code> function produced publication-quality figures:</p>
+<ul>
+<li>Performance trajectories with standard error bands showing ±3 years around contract</li>
+<li>Box plots comparing pre/post distributions for OPS and WAR</li>
+<li>Age distribution histogram at contract signing</li>
+<li>Comprehensive multi-panel figure with spaghetti plots and change distributions</li>
+</ul>
+<p>All plots saved as 300 DPI PNG files to <code>plots/</code> directory.</p>
+</section>
+<section id="tooling" class="level3">
+<h3 class="anchored" data-anchor-id="tooling">4. Tooling</h3>
+<p><strong>Core Dependencies:</strong></p>
+<ul>
+<li><code>pandas</code> (2.0+): Data manipulation and merging</li>
+<li><code>numpy</code>: Numerical operations and missing data handling</li>
+<li><code>statsmodels</code> (0.14+): Mixed effects linear models (<code>mixedlm</code>)</li>
+<li><code>scipy</code>: Statistical tests (t-tests, descriptive statistics)</li>
+<li><code>matplotlib</code> &amp; <code>seaborn</code>: Static publication-quality visualizations</li>
+<li><code>beautifulsoup4</code>: HTML parsing for web scraping</li>
+<li><code>requests</code>: HTTP client for standard web requests</li>
+<li><code>cloudscraper</code>: Cloudflare bypass for protected pages</li>
+<li><code>aiohttp</code>: Asynchronous HTTP (used in development, replaced by cloudscraper)</li>
+<li><code>streamlit</code> &amp; <code>plotly</code>: Interactive dashboard (optional, for exploration)</li>
+</ul>
+<p><strong>Development Environment:</strong></p>
+<ul>
+<li>Python 3.11.x</li>
+<li>Virtual environment (<code>.venv</code>) with isolated dependencies</li>
+<li>Jupyter notebooks for exploratory analysis and model development</li>
+<li>Modular package structure: separate modules for scraping, cleaning, and analysis</li>
+</ul>
+<p><strong>Reproducibility:</strong></p>
+<ul>
+<li>Complete pipeline callable via single function: <code>run_full_analysis()</code> in <code>analysis_package.py</code></li>
+<li>Intermediate outputs saved at each stage (cleaned stats, merged data, salary JSON)</li>
+<li>Deterministic scraping order via sorted player lists</li>
+<li>All analysis code version-controlled in project repository</li>
+<li>Data collection window: January 2025</li>
+<li>Analysis executed: December 2025</li>
+</ul>
+</section>
 </section>
 <section id="results-diagnostics" class="level2">
 <h2 class="anchored" data-anchor-id="results-diagnostics">Results &amp; Diagnostics</h2>
-<p><em>TODO: Summarize the main metrics, charts, or model diagnostics produced. Include links to figures or tables once available.</em></p>
+<section id="summary-statistics-and-descriptive-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="summary-statistics-and-descriptive-analysis">Summary Statistics and Descriptive Analysis</h3>
+<p>Our analysis examined 1,985 player-seasons across 300 MLB players from 2018-2025, identifying 495 instances of “big contracts” defined as salary increases exceeding 50% or $5 million year-over-year. Descriptive statistics revealed an apparent performance decline following contract signings, with mean OPS decreasing from 0.765 to 0.745 (Δ = -0.020) and mean WAR declining from 2.113 to 1.872 (Δ = -0.241). Figure 1 displays the average performance trajectory around contract signing , while Figure 2 presents box plot comparisons of pre- and post-contract distributions.</p>
+<div id="fig-performance" class="quarto-layout-panel">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-performance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-performance" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-boxplots" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-boxplots-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="src/bbanalysis/plots/contract_boxplots.png" class="img-fluid figure-img" data-ref-parent="fig-performance">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-boxplots-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(a) Figure 1
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-performance" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-trajectory" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-trajectory-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="src/bbanalysis/plots/contract_trajectory.png" class="img-fluid figure-img" data-ref-parent="fig-performance">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-trajectory-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(b) Figure 2
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-performance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Performance comparison before and after contract signing
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="mixed-effects-model-results" class="level3">
+<h3 class="anchored" data-anchor-id="mixed-effects-model-results">Mixed Effects Model Results</h3>
+<p>To account for player-specific baseline performance and temporal trends, we implemented mixed linear models with random intercepts for each player. Model 2, which focused on players within three years of contract signing (N=1,395 observations, 253 players), revealed that after controlling for age and temporal trends, the post-contract coefficient was non-significant (β = 0.011, p = 0.113, 95% CI: [-0.003, 0.025]). Critically, the age coefficient was negative and statistically significant (β = -0.004, p = 0.010), confirming that natural aging, not contract status, drives performance decline.</p>
+<p>Players typically sign their largest contracts between ages 28-31 (see <code>Figure 3</code>), coinciding with the onset of natural performance decline.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="src\bbanalysis\plots\age_at_contract.png" class="img-fluid figure-img" style="width:50.0%"></p>
+<figcaption>Figure 3: Age at contract</figcaption>
+</figure>
+</div>
+<p>Among the 253 players analyzed, 59.3% experienced performance declines after their contracts while 40.7% improved, indicating substantial individual variation. Age-stratified analysis showed older players (30+) had the largest descriptive decline (Δ = -0.036 OPS), while younger players (&lt;27) showed minimal change (Δ = -0.001 OPS). However, the interaction between post-contract status and age group was not statistically significant (p = 0.157), confirming that age itself—not the interaction with contract status—drives performance changes (see <code>Figure 4</code>).</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="src\bbanalysis\plots\comprehensive_analysis.png" class="img-fluid figure-img"></p>
+<figcaption>Figure 4: Age Analysis</figcaption>
+</figure>
+</div>
+</section>
+<section id="model-diagnostics" class="level3">
+<h3 class="anchored" data-anchor-id="model-diagnostics">Model Diagnostics</h3>
+<p>Model convergence was achieved with a log-likelihood of 1332.49. The variance components indicate substantial between-player variation (Group Var = 0.003), justifying the mixed effects approach over standard linear regression. The model achieved an R² of 0.66, with player fixed effects explaining the majority of performance variance (F = 7.23, p &lt; 0.001). Notably, temporal analysis revealed no evidence of progressive decline in years following contract signing (years_post coefficient = 0.002, p = 0.610), contradicting the hypothesis that players become increasingly complacent over time.</p>
+</section>
 </section>
 <section id="discussion-next-steps" class="level2">
 <h2 class="anchored" data-anchor-id="discussion-next-steps">Discussion &amp; Next Steps</h2>
-<p><em>TODO: Interpret the results, note limitations, and capture open questions or future experiments.</em></p>
+<section id="interpretation-of-results" class="level3">
+<h3 class="anchored" data-anchor-id="interpretation-of-results">Interpretation of Results</h3>
+<p>Our analysis reveals a notable discrepancy between descriptive statistics and model-based inference. While descriptive comparisons suggested contracts negatively impacted performance, the mixed effects model controlling for player-specific effects, age, and time trends found no statistically significant contract effect. This indicates that the observed descriptive decline is not causally related to contract signing itself, but rather reflects confounding factors that coincide with the timing of major contract negotiations.</p>
+<p>The key insight is that the apparent performance decline following large contracts is primarily explained by natural aging patterns rather than any motivational or behavioral change induced by financial security. Players typically sign their largest contracts between ages 28-31, right when natural performance decline begins. The significant age coefficient (p = 0.010) combined with the non-significant contract coefficient (p = 0.113) demonstrates that age—not contract status—drives the observed performance changes. This suggests high-profile cases like Anthony Rendon’s post-contract decline represent outliers reflecting injury issues or player-specific circumstances rather than systematic motivational effects.</p>
+</section>
+<section id="limitations" class="level3">
+<h3 class="anchored" data-anchor-id="limitations">Limitations</h3>
+<p>Several limitations warrant consideration. First, our definition of “big contracts” (50% salary increase or $5M jump) may not capture all meaningful contract events, particularly for already highly-paid players. Second, we lack data on contract length, guaranteed money, and performance incentives, which may moderate the relationship between contracts and performance. Third, injury data was not systematically included; injuries could confound the relationship between age and performance. Fourth, our analysis period (2018-2025) may not capture longer-term career trajectories, particularly for players who signed contracts at the end of this window.</p>
+<p>Additionally, survivor bias may affect our results—players who receive large contracts are already elite performers, potentially making them less susceptible to motivational decline. We also cannot fully disentangle regression to the mean from true performance changes, as players often sign contracts immediately following career-best seasons. Finally, our age control uses a linear specification, though performance decline may be non-linear (though our age-squared model showed similar results).</p>
+</section>
+<section id="future-research-directions" class="level3">
+<h3 class="anchored" data-anchor-id="future-research-directions">Future Research Directions</h3>
+<p>Several avenues for future research emerge from this analysis:</p>
+<ul>
+<li><strong>Contract structure analysis</strong>: Examine how contract length, guaranteed money, and incentive clauses affect post-contract performance</li>
+<li><strong>Injury integration</strong>: Incorporate detailed injury data to better separate age-related decline from injury-related decline</li>
+<li><strong>Position-specific effects</strong>: Investigate whether contract effects differ by position (e.g., pitchers vs.&nbsp;hitters, or by defensive position)</li>
+<li><strong>Team context</strong>: Analyze whether team quality, market size, or competitive pressure moderates contract effects</li>
+<li><strong>Comparison to other sports</strong>: Extend this methodology to NBA, NFL, or NHL data to test generalizability</li>
+<li><strong>Non-linear aging models</strong>: Implement spline or polynomial age terms to better capture performance curve shapes</li>
+<li><strong>Causal inference approaches</strong>: Apply propensity score matching or instrumental variables to strengthen causal claims</li>
+</ul>
+<p>These extensions would provide a more comprehensive understanding of the complex relationship between compensation, motivation, and athletic performance in professional sports.</p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

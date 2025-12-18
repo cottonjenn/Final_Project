@@ -8,7 +8,7 @@ from plotly.subplots import make_subplots
 # Load your data
 # df_filtered = pd.read_csv('MLB_2018_2025_Full.csv')  # or however you load it
 
-from final_project_demo.analysis import (
+from bbanalysis.analysis import (
     filter_players_with_multiple_seasons,
     create_contract_indicators,
     run_mixed_effects_models,        # optional, if you want models

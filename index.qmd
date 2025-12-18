@@ -12,9 +12,11 @@ For our final project, we decided to focus on the effect of salaries on a baseba
 
 We will built a python package that will enable users replicate how we scraped and analyzed baseball data from baseball-reference.com. View the links below to see our documentation and results!
 
+Streamlit Interactive App [here](https://stat386-baseballproject.streamlit.app/).
+
 Documentation [here](Documentation.qmd).
 
-Get started [here](Tutorial.qmd).
+Tutorial [here](Tutorial.qmd).
 
 Review the [technical report](TechnicalReport.qmd).
 

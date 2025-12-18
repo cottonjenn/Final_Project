@@ -20,8 +20,21 @@ URLS = [
     'https://www.baseball-reference.com/leagues/majors/2025-standard-batting.shtml',
 ]
 
+# HEADERS = {
+#     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+# }
 HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-User": "?1",
+    "Priority": "u=0, i"
 }
 
 COLUMNS = [
@@ -151,9 +164,9 @@ def clean_batting_data(df):
     df = df.sort_values(['Player', 'Year'])
     df = df.drop_duplicates(subset=['Player', 'Year'], keep='first')
 
-    player_counts = df['Player'].value_counts()
-    players_2plus = player_counts[player_counts >= 3].index
-    df = df[df['Player'].isin(players_2plus)]
+    # player_counts = df['Player'].value_counts()
+    # players_2plus = player_counts[player_counts >= 3].index
+    # df = df[df['Player'].isin(players_2plus)]
 
     return df.reset_index(drop=True)
 
