@@ -18,8 +18,7 @@ website:
 format:
   html:
     theme:
-      - cosmo
-      - brand
+      - default
     css: styles.css
     toc: true
 
