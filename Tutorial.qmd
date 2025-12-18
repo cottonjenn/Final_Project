@@ -72,7 +72,6 @@ soup = BeautifulSoup(html, "html.parser")
 
 result = parse_salary_table_from_soup(soup)
 print(result)
-
 ```
 
 At this point, you should now have scraped all the statistics data and have the setup for scraping the salary data. These following functions futher prepare and execute the scraping of the data from the actual player pages.
@@ -86,7 +85,7 @@ This function uses asyncio to actually scrape the data fromt he site, getting th
 ```{python}
 import pandas as pd
 import json
-from bbanalysis.gathering_links import extract_unique_links 
+from bbanalysis.gathering_salaries import extract_unique_links 
 
 test_csv_path = "test_players.csv"
 test_data = pd.DataFrame({
@@ -108,16 +107,25 @@ print(json.dumps(data, indent=2))
 This function is important becuase what it does is allow us to organize all the unique player links in one place. Many of the players in the data show up multiple times becuase they played more than one season over the six-year span, so this filters out repeat links.
 
 ```{python}
+import json
 import cloudscraper
 from bbanalysis.gathering_salaries import scrape_with_cloudscraper
 
 scraper = cloudscraper.create_scraper()
-
 url = "https://www.baseball-reference.com/players/l/lindofr01.shtml"
 
 result = scrape_with_cloudscraper(url, scraper)
-print(result)
 
+# Transform to required format
+formatted_data = {
+    "id": 1,
+    "player": "Francisco Lindor",
+    "salaries": result  # Already in the right format!
+}
+
+# Save as JSON
+with open('lindor_data.json', 'w', encoding='utf-8') as f:
+    json.dump(formatted_data, f, indent=2)
 ```
 
 Now with the scrape_salary_from_url function, you may already be able to scrape the salary data. However, due to rate limits it might be really difficult to scrape the data, and you might get errors. Using cloudscraper allows a user to implement their scraper while still maintaining speed and efficiency. Thus the scrape_with_cloudscraper function prepares us to use a cloudscraper. 
@@ -125,8 +133,10 @@ Now with the scrape_salary_from_url function, you may already be able to scrape 
 Next you will run this funciton:
 
 ```{python}
-from bbanalysis.gathering_salaries import churn_with_cloudscraper
-churn_with_cloudscraper()
+# If we were to run this, it would take an hour. This function below loops scrape_with_cloudscraper for all links. 
+
+# from bbanalysis.gathering_salaries import churn_with_cloudscraper
+# churn_with_cloudscraper()
 ```
 
 This function implements the cloudscraper by creating one, then loops through the unique links dataset and scrapes all the salary data from 2018-2025 using scrape_with_cloudscraper. It then puts all the data into a .json file that stores the salary data. Once this finishes,you now have all the salary data from 2018-2025!
@@ -135,14 +145,14 @@ Now you just need to convert and organize the salary data properly to combine wi
 
 ```{python}
 from bbanalysis.gathering_salaries import salaries_json_to_csv
-salaries_json_to_csv("salaries.json", "salaries.csv")
+salaries_json_to_csv("lindor_data.json", "lindor_data.csv")
 ```
 
 Now we'll combine both the datasets using this function:
 
 ```{python}
 import pandas as pd
-from bbanalysis.gathering_salaries import load_and_merge_data
+from bbanalysis.analysis import load_and_merge_data
 
 stats_test = pd.DataFrame({
     "Player": ["Mike Trout", "Aaron Judge"],
@@ -164,7 +174,6 @@ salaries_test.to_csv(salaries_csv_path, index=False)
 merged_df = load_and_merge_data(stats_csv_path, salaries_csv_path, "test_merged.csv")
 
 print(merged_df)
-
 ```
 
 And now we're ready to do our analysis!
@@ -173,7 +182,7 @@ The first thing we will do is filter out players who ahve less than five seasons
 
 ```{python}
 import pandas as pd
-from bbanalysis.gathering_salaries import filter_players_with_multiple_seasons
+from bbanalysis.analysis import filter_players_with_multiple_seasons
 
 test_data = pd.DataFrame({
     "player": ["A", "A", "A", "B", "B", "C", "C", "C", "C", "C"],
@@ -203,7 +212,6 @@ test_data = pd.DataFrame({
 df_with_contracts = create_contract_indicators(test_data, pct_threshold=0.5, abs_threshold=1_000_000)
 
 print(df_with_contracts)
-
 ```
 
 Now that we have this created, we can effectively compare statistical performance with before and after a large contract signing. One way to effectively do this is to run mixed effects models. We have a function for this:
@@ -266,25 +274,7 @@ if os.path.exists(output_dir):
 generate_visualizations(test_data, output_dir=output_dir)
 
 print("Files in output directory:", os.listdir(output_dir))
-
 ```
-
-Now we can put it all together with this function:
-
-```{python}
-from bbanalysis.analysis import run_full_analysis
-
-results = run_full_analysis(
-    stats_path="test_stats.csv",       
-    salary_path="test_salaries.csv",   
-    min_seasons=3,                     
-    output_dir="test_full_analysis_plots"
-)
-
-```
-
-This allows us to implement all of these other functions into one full, effective analysis.
-
 
 
 
